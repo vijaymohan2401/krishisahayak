@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KrishiSahayak - Farmer Login</title>
+  <meta name="description" content="Login page for farmers to sign in and share farm and location details.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="font-size-md">
+  <main class="login-page">
+    <div class="container">
+      <section class="login-card glass-card">
+        <div class="card-header flex-row-between">
+          <div>
+            <h1 class="section-title">Farmer Login</h1>
+            <p class="section-desc">Enter your farm details and share your location to personalize nearby services.</p>
+          </div>
+          <a href="index.html" class="btn btn-link">Back to Dashboard</a>
+        </div>
+
+        <form id="farmer-login-form" class="margin-top-lg">
+          <div class="grid-col-2">
+            <div class="form-group">
+              <label for="farmer-name">Farmer Name</label>
+              <input type="text" id="farmer-name" class="input-control" placeholder="e.g. Vijay Kumar" required>
+            </div>
+            <div class="form-group">
+              <label for="farm-name">Farm / Village Name</label>
+              <input type="text" id="farm-name" class="input-control" placeholder="e.g. Shanti Farm, Sector 18" required>
+            </div>
+            <div class="form-group">
+              <label for="mobile-number">Mobile Number</label>
+              <input type="tel" id="mobile-number" class="input-control" placeholder="e.g. +91 98765 43210" required>
+            </div>
+            <div class="form-group">
+              <label for="district">District / Region</label>
+              <input type="text" id="district" class="input-control" placeholder="e.g. Faridabad" required>
+            </div>
+            <div class="form-group">
+              <label for="crop-type">Primary Crop Type</label>
+              <input type="text" id="crop-type" class="input-control" placeholder="e.g. Wheat, Rice, Vegetables" required>
+            </div>
+            <div class="form-group">
+              <label for="support-email">Email (optional)</label>
+              <input type="email" id="support-email" class="input-control" placeholder="e.g. vijay@example.com">
+            </div>
+          </div>
+
+          <div class="location-card glass-card margin-top-lg">
+            <div class="flex-row-between">
+              <div>
+                <h2 class="card-title">Location Details</h2>
+                <p class="section-desc">Your coordinates help KrishiSahayak surface local facilities and agro-advisory.</p>
+              </div>
+              <button type="button" id="detect-location-btn" class="btn btn-outline">Detect Location</button>
+            </div>
+
+            <div class="location-summary margin-top-md" id="location-summary">
+              <div class="detail-row">
+                <span>Location Status</span>
+                <span id="location-status">Waiting for location access...</span>
+              </div>
+              <div class="detail-row">
+                <span>Latitude</span>
+                <span id="latitude">-</span>
+              </div>
+              <div class="detail-row">
+                <span>Longitude</span>
+                <span id="longitude">-</span>
+              </div>
+              <div class="detail-row">
+                <span>Detected City</span>
+                <span id="city">-</span>
+              </div>
+              <div class="detail-row">
+                <span>Detected Region</span>
+                <span id="region">-</span>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block margin-top-lg flex-row-center">
+            <i data-lucide="log-in"></i>
+            <span>Login & Continue</span>
+          </button>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    lucide.replace();
+
+    const locationStatus = document.getElementById('location-status');
+    const latitude = document.getElementById('latitude');
+    const longitude = document.getElementById('longitude');
+    const city = document.getElementById('city');
+    const region = document.getElementById('region');
+    const detectBtn = document.getElementById('detect-location-btn');
+    const loginForm = document.getElementById('farmer-login-form');
+
+    async function updateLocation(position) {
+      const { latitude: lat, longitude: lng } = position.coords;
+      latitude.textContent = lat.toFixed(5);
+      longitude.textContent = lng.toFixed(5);
+      locationStatus.textContent = 'Location detected';
+
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+        const data = await response.json();
+        city.textContent = data.address.city || data.address.town || data.address.village || 'Unknown';
+        region.textContent = data.address.state || data.address.county || 'Unknown';
+      } catch (error) {
+        city.textContent = 'Unavailable';
+        region.textContent = 'Unavailable';
+      }
+    }
+
+    function handleLocationError(error) {
+      locationStatus.textContent = 'Location access denied or unavailable';
+      latitude.textContent = '-';
+      longitude.textContent = '-';
+      city.textContent = '-';
+      region.textContent = '-';
+    }
+
+    function detectLocation() {
+      if (!navigator.geolocation) {
+        locationStatus.textContent = 'Geolocation is not supported by your browser.';
+        return;
+      }
+
+      locationStatus.textContent = 'Detecting location...';
+      navigator.geolocation.getCurrentPosition(updateLocation, handleLocationError, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 600000
+      });
+    }
+
+    detectBtn.addEventListener('click', detectLocation);
+    loginForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      alert('Login successful! Your farm and location details are now ready for personalized service.');
+    });
+
+    detectLocation();
+  </script>
+</body>
+</html>

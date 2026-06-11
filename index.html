@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KrishiSahayak - Farmers' Hub & Facility Finder</title>
+  <meta name="description" content="An easy-to-use directory, interactive map, price tracker, and community portal for farmers to find seeds, pesticides, and agricultural services.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="font-size-md">
+  
+  <!-- Top Accessibility Bar -->
+  <div class="accessibility-bar">
+    <div class="container flex-row-between">
+      <div class="emergency-contact flex-row-align">
+        <i data-lucide="phone-call" class="pulse-icon"></i>
+        <span class="font-weight-600"><span data-i18n="helpline">Agri Helpline</span>: <a href="tel:18001801551" class="helpline-link">1800-180-1551</a></span>
+      </div>
+      <div class="accessibility-controls flex-row-align">
+        <!-- Text Resizer -->
+        <div class="text-resizer flex-row-align">
+          <span data-i18n="textSize" class="control-label">Text Size</span>
+          <button id="btn-text-sm" aria-label="Decrease text size" class="btn-control">A-</button>
+          <button id="btn-text-md" aria-label="Normal text size" class="btn-control active">A</button>
+          <button id="btn-text-lg" aria-label="Increase text size" class="btn-control">A+</button>
+        </div>
+        
+        <!-- Language Selector -->
+        <div class="lang-selector flex-row-align">
+          <i data-lucide="languages" class="icon-sm"></i>
+          <select id="lang-select" aria-label="Select Language" class="select-control">
+            <option value="en">English</option>
+            <option value="hi">हिन्दी (Hindi)</option>
+            <option value="es">Español (Spanish)</option>
+          </select>
+        </div>
+        
+        <!-- Dark Mode Toggle -->
+        <button id="theme-toggle-btn" class="theme-toggle btn-control" aria-label="Toggle dark/light theme">
+          <i data-lucide="moon" class="theme-icon-dark"></i>
+          <i data-lucide="sun" class="theme-icon-light hidden"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header & Navigation -->
+  <header class="main-header">
+    <div class="container flex-row-between">
+      <a href="#" class="logo flex-row-align" id="logo-home">
+        <div class="logo-icon flex-row-center">
+          <i data-lucide="sprout"></i>
+        </div>
+        <div class="logo-text">
+          <h1 class="logo-title">Krishi<span class="text-primary">Sahayak</span></h1>
+          <p class="logo-subtitle" data-i18n="tagline">Empowering Farmers, Enriching Lives</p>
+        </div>
+      </a>
+      
+      <!-- Hamburger Menu for Mobile -->
+      <button class="nav-toggle" id="nav-toggle-btn" aria-label="Toggle menu" aria-expanded="false">
+        <i data-lucide="menu"></i>
+      </button>
+
+      <!-- Main Navigation Menu -->
+      <nav class="main-nav" id="main-navigation">
+        <ul class="nav-list">
+          <li class="nav-item">
+            <button class="nav-link active" id="nav-dashboard" data-target="dashboard-view">
+              <i data-lucide="layout-dashboard"></i>
+              <span data-i18n="navDashboard">Dashboard</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" id="nav-finder" data-target="finder-view">
+              <i data-lucide="map-pin"></i>
+              <span data-i18n="navFinder">Find Facilities</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" id="nav-mandi" data-target="mandi-view">
+              <i data-lucide="trending-up"></i>
+              <span data-i18n="navMandi">Mandi Prices</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" id="nav-community" data-target="community-view">
+              <i data-lucide="users"></i>
+              <span data-i18n="navCommunity">Community Portal</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <a href="login.html" class="nav-link">
+              <i data-lucide="log-in"></i>
+              <span>Login</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Mandi Prices Ticker -->
+  <div class="mandi-ticker-wrapper">
+    <div class="ticker-label flex-row-align">
+      <i data-lucide="rss" class="ticker-icon"></i>
+      <span data-i18n="mandiTicker">Mandi Live Price:</span>
+    </div>
+    <div class="ticker-content" id="mandi-ticker">
+      <!-- Generated by JS -->
+      <div class="ticker-item"><span class="crop-name">Wheat (Kalyanpur)</span>: <span class="crop-price">₹2,350/Qtl</span> <span class="trend-up"><i data-lucide="arrow-up-right"></i> +1.2%</span></div>
+      <div class="ticker-item"><span class="crop-name">Paddy (Basmati)</span>: <span class="crop-price">₹4,200/Qtl</span> <span class="trend-up"><i data-lucide="arrow-up-right"></i> +0.8%</span></div>
+      <div class="ticker-item"><span class="crop-name">Potato (Desi)</span>: <span class="crop-price">₹1,150/Qtl</span> <span class="trend-down"><i data-lucide="arrow-down-left"></i> -0.5%</span></div>
+      <div class="ticker-item"><span class="crop-name">Onion (Red)</span>: <span class="crop-price">₹1,600/Qtl</span> <span class="trend-up"><i data-lucide="arrow-up-right"></i> +2.3%</span></div>
+    </div>
+  </div>
+
+  <!-- Main Content Areas -->
+  <main class="app-main-content">
+    
+    <!-- 1. DASHBOARD VIEW -->
+    <section id="dashboard-view" class="view-section active">
+      <div class="container">
+        
+        <!-- Welcome banner -->
+        <div class="dashboard-hero-card glass-card">
+          <div class="hero-content">
+            <h2 class="hero-title"><span data-i18n="welcome">Welcome to KrishiSahayak</span>, <span id="user-location-text">Faridabad Region</span>!</h2>
+            <p class="hero-desc" data-i18n="heroDescription">Access verified agro-dealers, equipment rental, seed suppliers, testing labs, and real-time support in your local language.</p>
+            <div class="hero-search-bar">
+              <input type="text" id="hero-search-input" placeholder="Search for seeds, pesticides, cold storage..." aria-label="Quick Search">
+              <button id="hero-search-btn" class="btn btn-primary flex-row-center">
+                <i data-lucide="search"></i>
+                <span data-i18n="search">Search</span>
+              </button>
+            </div>
+          </div>
+          <div class="hero-illustration">
+            <i data-lucide="tractor" class="bg-tractor-icon"></i>
+          </div>
+        </div>
+
+        <!-- Weather Widget & Crop Advisory Row -->
+        <div class="grid-col-2 margin-top-lg">
+          <!-- Weather Card -->
+          <div class="card weather-card glass-card">
+            <div class="card-header flex-row-between">
+              <div class="flex-row-align">
+                <i data-lucide="cloud-sun" class="card-icon text-accent"></i>
+                <h3 class="card-title" data-i18n="weatherTitle">Weather & Farming advisory</h3>
+              </div>
+              <span class="weather-temp" id="weather-temp">32°C</span>
+            </div>
+            <div class="weather-body flex-row-between">
+              <div class="weather-status-wrap">
+                <span class="weather-description" id="weather-desc">Partly Cloudy</span>
+                <div class="weather-details flex-row-align margin-top-xs">
+                  <span><i data-lucide="droplet" class="icon-xs text-primary"></i> <span id="weather-humidity">Humidity: 65%</span></span>
+                  <span class="margin-left-md"><i data-lucide="wind" class="icon-xs text-accent"></i> <span id="weather-wind">Wind: 12 km/h</span></span>
+                </div>
+              </div>
+              <div class="weather-alert alert-success">
+                <i data-lucide="badge-check" class="alert-icon"></i>
+                <div class="alert-text">
+                  <strong data-i18n="advisoryHeadline">Good Sowing Conditions</strong>
+                  <p id="weather-advisory">Optimal weather for fertilizer application. Next rain forecast in 3 days.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mandatory Government Helpline & Subsidies -->
+          <div class="card subsidy-card glass-card">
+            <div class="card-header flex-row-align">
+              <i data-lucide="badge-percent" class="card-icon text-primary"></i>
+              <h3 class="card-title" data-i18n="schemesTitle">Active Govt Schemes & Subsidies</h3>
+            </div>
+            <div class="card-body">
+              <ul class="scheme-list">
+                <li class="scheme-item flex-row-between">
+                  <div class="scheme-details">
+                    <span class="scheme-tag tag-new" data-i18n="schemeNew">New</span>
+                    <strong class="scheme-name">PM Kisan Seed Subsidy 2026</strong>
+                    <p class="scheme-desc">Get 50% subsidy on certified high-yield seeds from registered dealers.</p>
+                  </div>
+                  <button class="btn btn-outline btn-sm scheme-btn" data-scheme-id="1" data-i18n="viewDetails">Details</button>
+                </li>
+                <li class="scheme-item flex-row-between">
+                  <div class="scheme-details">
+                    <span class="scheme-tag tag-active" data-i18n="schemeActive">Active</span>
+                    <strong class="scheme-name">Drip Irrigation Rebate</strong>
+                    <p class="scheme-desc">Up to 80% subsidy for micro-irrigation installations in dry zones.</p>
+                  </div>
+                  <button class="btn btn-outline btn-sm scheme-btn" data-scheme-id="2" data-i18n="viewDetails">Details</button>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Category Grid Finder -->
+        <h3 class="section-subtitle margin-top-xl" data-i18n="categoriesHeading">What facility are you looking for?</h3>
+        <div class="category-grid margin-top-md">
+          <div class="category-card" data-category="seeds">
+            <div class="category-icon flex-row-center c-seeds">
+              <i data-lucide="leaf"></i>
+            </div>
+            <h4 class="category-name" data-i18n="catSeeds">Seeds & Crops</h4>
+            <p class="category-desc" data-i18n="descSeeds">Certified high-yielding seeds (HYV), wheat, rice, pulses, and organic suppliers.</p>
+            <span class="category-link flex-row-align">
+              <span data-i18n="findNow">Find Now</span> <i data-lucide="arrow-right"></i>
+            </span>
+          </div>
+
+          <div class="category-card" data-category="pesticides">
+            <div class="category-icon flex-row-center c-pesticides">
+              <i data-lucide="shield-alert"></i>
+            </div>
+            <h4 class="category-name" data-i18n="catPesticides">Pesticides & Fertilizers</h4>
+            <p class="category-desc" data-i18n="descPesticides">Bio-pesticides, organic compost, urea, NPK fertilizers, and insect repellents.</p>
+            <span class="category-link flex-row-align">
+              <span data-i18n="findNow">Find Now</span> <i data-lucide="arrow-right"></i>
+            </span>
+          </div>
+
+          <div class="category-card" data-category="machinery">
+            <div class="category-icon flex-row-center c-machinery">
+              <i data-lucide="nut"></i>
+            </div>
+            <h4 class="category-name" data-i18n="catMachinery">Machinery & Rentals</h4>
+            <p class="category-desc" data-i18n="descMachinery">Tractor leasing, seed drills, harvesters, rotavators, and pump rental hubs.</p>
+            <span class="category-link flex-row-align">
+              <span data-i18n="findNow">Find Now</span> <i data-lucide="arrow-right"></i>
+            </span>
+          </div>
+
+          <div class="category-card" data-category="testing">
+            <div class="category-icon flex-row-center c-testing">
+              <i data-lucide="microscope"></i>
+            </div>
+            <h4 class="category-name" data-i18n="catTesting">Soil Testing Labs</h4>
+            <p class="category-desc" data-i18n="descTesting">Government-certified labs for soil health report cards and pH testing.</p>
+            <span class="category-link flex-row-align">
+              <span data-i18n="findNow">Find Now</span> <i data-lucide="arrow-right"></i>
+            </span>
+          </div>
+
+          <div class="category-card" data-category="storage">
+            <div class="category-icon flex-row-center c-storage">
+              <i data-lucide="warehouse"></i>
+            </div>
+            <h4 class="category-name" data-i18n="catStorage">Cold Storage</h4>
+            <p class="category-desc" data-i18n="descStorage">Cold storage facilities and grain warehouses to store your harvest safely.</p>
+            <span class="category-link flex-row-align">
+              <span data-i18n="findNow">Find Now</span> <i data-lucide="arrow-right"></i>
+            </span>
+          </div>
+
+          <div class="category-card" data-category="experts">
+            <div class="category-icon flex-row-center c-experts">
+              <i data-lucide="user-check"></i>
+            </div>
+            <h4 class="category-name" data-i18n="catExperts">Agri Experts</h4>
+            <p class="category-desc" data-i18n="descExperts">Consult with local government officers, veterinary docs, and crop scientists.</p>
+            <span class="category-link flex-row-align">
+              <span data-i18n="findNow">Find Now</span> <i data-lucide="arrow-right"></i>
+            </span>
+          </div>
+        </div>
+
+        <!-- Featured Tips Row -->
+        <div class="featured-tips margin-top-xl card glass-card">
+          <div class="tips-header flex-row-align">
+            <i data-lucide="sparkles" class="card-icon text-accent"></i>
+            <h3 class="card-title" data-i18n="farmingTipTitle">Expert Farming Tip of the Day</h3>
+          </div>
+          <div class="tips-body flex-row-between">
+            <div class="tip-text">
+              <h4 id="tip-headline">Integrated Pest Management (IPM) for Rice</h4>
+              <p id="tip-paragraph">Instead of synthetic sprays, introduce natural predators and neem oil. This reduces soil toxicity by up to 45% and retains natural soil moisture, saving pesticide costs.</p>
+            </div>
+            <button class="btn btn-outline" id="btn-read-tips" data-i18n="readMoreTips">Read Agri-Blogs</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 2. FINDER VIEW (DIRECTORY + MAP) -->
+    <section id="finder-view" class="view-section">
+      <div class="finder-layout-container">
+        
+        <!-- Left Side: Directory Listings and Search Filters -->
+        <div class="finder-sidebar">
+          
+          <!-- Filter Panel -->
+          <div class="search-filter-card">
+            <div class="search-box-wrap">
+              <input type="text" id="facility-search-input" placeholder="Search facilities, shops, labs..." aria-label="Search facilities">
+              <button id="voice-search-btn" class="btn-voice-search" aria-label="Voice search with microphone" title="Search using voice">
+                <i data-lucide="mic"></i>
+              </button>
+            </div>
+            
+            <div class="voice-status-bar hidden" id="voice-status-container">
+              <div class="voice-pulse-ring"></div>
+              <span id="voice-status-text">Listening... Speak now</span>
+            </div>
+
+            <div class="filters-row margin-top-sm">
+              <div class="filter-group">
+                <label for="filter-category" class="filter-label" data-i18n="filterCategory">Category</label>
+                <select id="filter-category" class="select-control">
+                  <option value="all" data-i18n="optAll">All Facilities</option>
+                  <option value="seeds" data-i18n="optSeeds">Seeds & Crops</option>
+                  <option value="pesticides" data-i18n="optPesticides">Pesticides & Fertilizers</option>
+                  <option value="machinery" data-i18n="optMachinery">Machinery & Rentals</option>
+                  <option value="testing" data-i18n="optTesting">Soil Testing Labs</option>
+                  <option value="storage" data-i18n="optStorage">Cold Storage</option>
+                  <option value="experts" data-i18n="optExperts">Agri Experts</option>
+                </select>
+              </div>
+              
+              <div class="filter-group">
+                <label for="filter-radius" class="filter-label" data-i18n="filterDistance">Distance (Radius)</label>
+                <select id="filter-radius" class="select-control">
+                  <option value="5">Within 5 km</option>
+                  <option value="10" selected>Within 10 km</option>
+                  <option value="25">Within 25 km</option>
+                  <option value="50">Within 50 km</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="filters-row margin-top-xs">
+              <div class="filter-checkbox-group flex-row-align">
+                <input type="checkbox" id="filter-open" checked>
+                <label for="filter-open" data-i18n="filterOpenNow">Open Now</label>
+              </div>
+              <div class="filter-checkbox-group flex-row-align margin-left-md">
+                <input type="checkbox" id="filter-gov">
+                <label for="filter-gov" data-i18n="filterGovSubsidy">Govt Subsidized</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Results Counter -->
+          <div class="results-meta flex-row-between">
+            <span class="results-count" id="results-count-text">Found 12 agricultural facilities</span>
+            <button class="btn-link text-primary" id="btn-reset-filters" data-i18n="resetFilters">Reset Filters</button>
+          </div>
+
+          <!-- Listings Card Container -->
+          <div class="listings-container" id="listings-list">
+            <!-- Dynamically populated by app.js -->
+          </div>
+        </div>
+
+        <!-- Right Side: Interactive Map -->
+        <div class="finder-map-container">
+          <div id="map"></div>
+          <div class="map-overlay-card" id="map-recenter-box">
+            <button class="btn btn-sm btn-glass flex-row-align" id="btn-recenter-map">
+              <i data-lucide="navigation"></i>
+              <span data-i18n="recenterMap">Recenter My Location</span>
+            </button>
+          </div>
+        </div>
+        
+      </div>
+    </section>
+
+    <!-- 3. MANDI PRICES VIEW -->
+    <section id="mandi-view" class="view-section">
+      <div class="container">
+        
+        <div class="card glass-card padding-lg">
+          <div class="flex-row-between wrap-reverse">
+            <div class="mandi-header-desc">
+              <h2 class="section-title"><span data-i18n="mandiTitleFull">Mandi (Agricultural Market) Prices</span> 📊</h2>
+              <p class="section-desc" data-i18n="mandiSubtitle">Compare wholesale crop prices across different regional markets. Updated hourly.</p>
+            </div>
+            <div class="mandi-filters flex-row-align margin-bottom-md">
+              <div class="filter-group">
+                <label for="mandi-region-select" class="filter-label" data-i18n="selectRegion">Select Market/Region</label>
+                <select id="mandi-region-select" class="select-control">
+                  <option value="all">All Nearby Mandis</option>
+                  <option value="faridabad">Faridabad Main Mandi</option>
+                  <option value="ballabgarh">Ballabgarh Sub Mandi</option>
+                  <option value="palwal">Palwal Grain Market</option>
+                  <option value="nuh">Nuh Mandi</option>
+                </select>
+              </div>
+              <div class="filter-group margin-left-md">
+                <label for="mandi-search-input" class="filter-label" data-i18n="searchCrop">Search Crop</label>
+                <input type="text" id="mandi-search-input" placeholder="e.g. Wheat, Potato..." class="input-control">
+              </div>
+            </div>
+          </div>
+
+          <!-- Market Prices Grid Table -->
+          <div class="mandi-table-container margin-top-lg">
+            <table class="mandi-table">
+              <thead>
+                <tr>
+                  <th data-i18n="tblCropName">Crop Name</th>
+                  <th data-i18n="tblMarket">Mandi Market</th>
+                  <th data-i18n="tblMinPrice">Min Price (per Qtl)</th>
+                  <th data-i18n="tblMaxPrice">Max Price (per Qtl)</th>
+                  <th data-i18n="tblAvgPrice">Modal/Average</th>
+                  <th data-i18n="tblTrend">Daily Trend</th>
+                </tr>
+              </thead>
+              <tbody id="mandi-table-body">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Price Trend Visual representation (CSS chart bars) -->
+          <h3 class="section-subtitle margin-top-xl" data-i18n="mandiChartTitle">Weekly Price Trends (Top Grains)</h3>
+          <div class="charts-row margin-top-md">
+            <div class="chart-box">
+              <div class="chart-header flex-row-between">
+                <strong>Wheat (Desi)</strong>
+                <span class="text-success">+2.4%</span>
+              </div>
+              <div class="chart-bars-wrap">
+                <div class="chart-bar-container"><div class="chart-bar" style="height: 78%;" title="Mon: ₹2280"><span class="bar-value">₹2.2K</span></div><span class="bar-label">Mon</span></div>
+                <div class="chart-bar-container"><div class="chart-bar" style="height: 80%;" title="Tue: ₹2300"><span class="bar-value">₹2.3K</span></div><span class="bar-label">Tue</span></div>
+                <div class="chart-bar-container"><div class="chart-bar" style="height: 82%;" title="Wed: ₹2320"><span class="bar-value">₹2.3K</span></div><span class="bar-label">Wed</span></div>
+                <div class="chart-bar-container"><div class="chart-bar" style="height: 85%;" title="Thu: ₹2340"><span class="bar-value">₹2.3K</span></div><span class="bar-label">Thu</span></div>
+                <div class="chart-bar-container"><div class="chart-bar active" style="height: 88%;" title="Fri (Today): ₹2350"><span class="bar-value">₹2.35K</span></div><span class="bar-label">Fri</span></div>
+              </div>
+            </div>
+
+            <div class="chart-box">
+              <div class="chart-header flex-row-between">
+                <strong>Mustard Seeds</strong>
+                <span class="text-danger">-1.8%</span>
+              </div>
+              <div class="chart-bars-wrap">
+                <div class="chart-bar-container"><div class="chart-bar" style="height: 92%;" title="Mon: ₹5450"><span class="bar-value">₹5.4K</span></div><span class="bar-label">Mon</span></div>
+                <div class="chart-bar-container"><div class="chart-bar" style="height: 90%;" title="Tue: ₹5400"><span class="bar-value">₹5.4K</span></div><span class="bar-label">Tue</span></div>
+                <div class="chart-bar-container"><div class="chart-bar" style="height: 89%;" title="Wed: ₹5380"><span class="bar-value">₹5.3K</span></div><span class="bar-label">Wed</span></div>
+                <div class="chart-bar-container"><div class="chart-bar" style="height: 87%;" title="Thu: ₹5320"><span class="bar-value">₹5.3K</span></div><span class="bar-label">Thu</span></div>
+                <div class="chart-bar-container"><div class="chart-bar active" style="height: 86%;" title="Fri (Today): ₹5300"><span class="bar-value">₹5.3K</span></div><span class="bar-label">Fri</span></div>
+              </div>
+            </div>
+
+            <div class="chart-box">
+              <div class="chart-header flex-row-between">
+                <strong>Cotton (Bt)</strong>
+                <span class="text-success">+5.6%</span>
+              </div>
+              <div class="chart-bars-wrap">
+                <div class="chart-bar-container"><div class="chart-bar" style="height: 72%;" title="Mon: ₹6800"><span class="bar-value">₹6.8K</span></div><span class="bar-label">Mon</span></div>
+                <div class="chart-bar-container"><div class="chart-bar" style="height: 74%;" title="Tue: ₹6900"><span class="bar-value">₹6.9K</span></div><span class="bar-label">Tue</span></div>
+                <div class="chart-bar-container"><div class="chart-bar" style="height: 79%;" title="Wed: ₹7100"><span class="bar-value">₹7.1K</span></div><span class="bar-label">Wed</span></div>
+                <div class="chart-bar-container"><div class="chart-bar" style="height: 82%;" title="Thu: ₹7150"><span class="bar-value">₹7.1K</span></div><span class="bar-label">Thu</span></div>
+                <div class="chart-bar-container"><div class="chart-bar active" style="height: 88%;" title="Fri (Today): ₹7200"><span class="bar-value">₹7.2K</span></div><span class="bar-label">Fri</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 4. COMMUNITY VIEW -->
+    <section id="community-view" class="view-section">
+      <div class="container">
+        
+        <div class="grid-m-3-1">
+          <!-- Left: Forum Threads -->
+          <div class="community-threads-wrap">
+            <div class="card glass-card padding-lg">
+              <div class="flex-row-between margin-bottom-lg">
+                <div>
+                  <h2 class="section-title" data-i18n="communityTitle">Farmer's Support Forum</h2>
+                  <p class="section-desc" data-i18n="communitySubtitle">Ask questions, request help, and share suggestions with regional farmers and certified agents.</p>
+                </div>
+                <button class="btn btn-primary flex-row-align" id="btn-open-query-modal">
+                  <i data-lucide="plus-circle"></i>
+                  <span data-i18n="askQuestion">Ask a Question</span>
+                </button>
+              </div>
+
+              <!-- Filter tabs -->
+              <div class="community-tabs flex-row-align">
+                <button class="tab-btn active" data-tab="all" data-i18n="tabAllQueries">All Queries</button>
+                <button class="tab-btn" data-tab="seeds" data-i18n="tabSeeds">Seeds & Crops</button>
+                <button class="tab-btn" data-tab="pesticides" data-i18n="tabPests">Pesticides</button>
+                <button class="tab-btn" data-tab="machinery" data-i18n="tabMachinery">Rentals</button>
+              </div>
+
+              <!-- Question Feed Container -->
+              <div class="threads-list margin-top-md" id="forum-threads-list">
+                <!-- Dynamically loaded via LocalStorage/mock data in app.js -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Sidebar: Agriculture Blogs and Advisories -->
+          <div class="community-sidebar">
+            <div class="card glass-card margin-bottom-lg">
+              <div class="card-header flex-row-align">
+                <i data-lucide="book-open" class="card-icon text-primary"></i>
+                <h3 class="card-title" data-i18n="advisoriesHeading">Pest Alerts & Advisories</h3>
+              </div>
+              <div class="card-body">
+                <div class="blog-item">
+                  <span class="blog-date">June 5, 2026</span>
+                  <h4 class="blog-title">Yellow Rust alert in Wheat fields</h4>
+                  <p class="blog-preview">Immediate application of Propiconazole 25% EC (200 ml in 200L water per acre) is advised if yellow spots appear.</p>
+                </div>
+                <div class="blog-item margin-top-md">
+                  <span class="blog-date">June 2, 2026</span>
+                  <h4 class="blog-title">Sowing guidelines for Kharif season</h4>
+                  <p class="blog-preview">Learn how to test seed viability at home before planting rice nurseries. Saving cost on dead seeds.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Expert Advisory Helpline Info -->
+            <div class="card glass-card info-card bg-organic-gradient text-white">
+              <h3 class="card-title text-white flex-row-align"><i data-lucide="user-check"></i> <span data-i18n="expertConsultTitle">Free Expert Consultation</span></h3>
+              <p class="margin-top-xs" data-i18n="expertConsultDesc">Receive free advisory calls from Krishi Vigyan Kendra (KVK) scientists on soil treatment.</p>
+              <a href="tel:18001801551" class="btn btn-light margin-top-md w-full flex-row-center">
+                <i data-lucide="phone"></i>
+                <span data-i18n="callScientistBtn">Call a Scientist Now</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== MODALS & POPUPS ==================== -->
+
+  <!-- 1. FACILITY DETAIL MODAL -->
+  <div class="modal-backdrop hidden" id="facility-detail-modal" role="dialog" aria-modal="true">
+    <div class="modal-card glass-card">
+      <button class="modal-close-btn" id="modal-close-facility" aria-label="Close modal">
+        <i data-lucide="x"></i>
+      </button>
+      
+      <div class="modal-header">
+        <div class="flex-row-align gap-sm">
+          <div class="facility-modal-icon flex-row-center" id="modal-facility-icon">
+            <i data-lucide="leaf"></i>
+          </div>
+          <div>
+            <h2 class="modal-title" id="modal-facility-name">Kalyanpur Agri-Dealers</h2>
+            <div class="flex-row-align gap-xs margin-top-xs">
+              <span class="badge" id="modal-facility-category">Seeds & Crops</span>
+              <span class="rating-badge flex-row-align"><i data-lucide="star" class="fill-star"></i> <span id="modal-facility-rating">4.7</span></span>
+              <span class="badge badge-success" id="modal-facility-status">Open</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-body grid-col-2 margin-top-md">
+        <!-- Info Panel -->
+        <div class="modal-info-panel">
+          <h3 class="modal-sub-title" data-i18n="modalContactTitle">Contact & Location</h3>
+          <ul class="modal-info-list margin-top-xs">
+            <li class="flex-row-align"><i data-lucide="map-pin" class="text-primary"></i> <span id="modal-facility-address">12 Main Bazaar, Faridabad</span></li>
+            <li class="flex-row-align"><i data-lucide="phone" class="text-primary"></i> <a href="#" id="modal-facility-phone">+91 98765 43210</a></li>
+            <li class="flex-row-align"><i data-lucide="clock" class="text-primary"></i> <span id="modal-facility-hours">9:00 AM - 7:00 PM</span></li>
+            <li id="modal-facility-gov-row" class="flex-row-align hidden"><i data-lucide="badge-check" class="text-accent"></i> <span class="text-accent font-weight-600" data-i18n="govSubsidyEligible">Government Subsidy Accepted</span></li>
+          </ul>
+
+          <div class="modal-actions-row margin-top-md">
+            <a href="#" id="modal-call-btn" class="btn btn-primary flex-row-center w-full"><i data-lucide="phone-call"></i> <span data-i18n="callDealer">Call Dealer</span></a>
+            <a href="#" id="modal-whatsapp-btn" target="_blank" class="btn btn-success flex-row-center w-full"><i data-lucide="message-square"></i> <span data-i18n="chatWhatsapp">WhatsApp</span></a>
+          </div>
+        </div>
+
+        <!-- Products / Services Price Table -->
+        <div class="modal-inventory-panel">
+          <h3 class="modal-sub-title" id="modal-inventory-title">Available Seeds & Prices</h3>
+          <div class="modal-table-wrap margin-top-xs">
+            <table class="inventory-table">
+              <thead>
+                <tr>
+                  <th data-i18n="tblProduct">Item/Brand</th>
+                  <th data-i18n="tblPrice">Price</th>
+                  <th data-i18n="tblStock">Status</th>
+                </tr>
+              </thead>
+              <tbody id="modal-inventory-body">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Review section -->
+      <div class="modal-reviews-section margin-top-lg border-top padding-top-md">
+        <h3 class="modal-sub-title" data-i18n="ratingsAndReviews">Ratings & Reviews</h3>
+        
+        <div class="add-rating-bar flex-row-between wrap margin-top-xs">
+          <span data-i18n="yourRatingPrompt">Add your rating for this facility:</span>
+          <div class="stars-rating-selector flex-row-align" id="user-stars-wrap">
+            <button class="star-btn" data-value="1" aria-label="1 star"><i data-lucide="star"></i></button>
+            <button class="star-btn" data-value="2" aria-label="2 stars"><i data-lucide="star"></i></button>
+            <button class="star-btn" data-value="3" aria-label="3 stars"><i data-lucide="star"></i></button>
+            <button class="star-btn" data-value="4" aria-label="4 stars"><i data-lucide="star"></i></button>
+            <button class="star-btn" data-value="5" aria-label="5 stars"><i data-lucide="star"></i></button>
+          </div>
+        </div>
+
+        <div class="reviews-list margin-top-sm" id="modal-reviews-list">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. ASK QUESTION MODAL -->
+  <div class="modal-backdrop hidden" id="ask-question-modal" role="dialog" aria-modal="true">
+    <div class="modal-card glass-card max-w-md">
+      <button class="modal-close-btn" id="modal-close-question" aria-label="Close modal">
+        <i data-lucide="x"></i>
+      </button>
+      
+      <div class="modal-header">
+        <h2 class="modal-title" data-i18n="askQuestionTitle">Post a Farmer Query</h2>
+        <p class="modal-subtitle-desc" data-i18n="askQuestionDesc">Your post will be shared with verified dealers, experts, and nearby farmers.</p>
+      </div>
+      
+      <form id="new-query-form" class="modal-body margin-top-md">
+        <div class="form-group">
+          <label for="query-category" class="filter-label" data-i18n="queryCategoryLabel">Topic / Category</label>
+          <select id="query-category" class="select-control w-full" required>
+            <option value="seeds" data-i18n="optSeeds">Seeds & Crops</option>
+            <option value="pesticides" data-i18n="optPesticides">Pesticides & Fertilizers</option>
+            <option value="machinery" data-i18n="optMachinery">Machinery & Rentals</option>
+            <option value="other" data-i18n="optOther">Other Facilities</option>
+          </select>
+        </div>
+
+        <div class="form-group margin-top-sm">
+          <label for="query-location" class="filter-label" data-i18n="queryLocationLabel">Your Location</label>
+          <input type="text" id="query-location" class="input-control w-full" placeholder="e.g. Faridabad Sector 15" required>
+        </div>
+
+        <div class="form-group margin-top-sm">
+          <label for="query-text" class="filter-label" data-i18n="queryTextLabel">Describe your problem/request</label>
+          <textarea id="query-text" class="textarea-control w-full" rows="4" placeholder="Describe what you are looking for, including crop types or specific pesticide brands..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-full margin-top-md flex-row-center">
+          <i data-lucide="send"></i>
+          <span data-i18n="submitQueryBtn">Submit Query</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. ADD ANSWER MODAL -->
+  <div class="modal-backdrop hidden" id="add-answer-modal" role="dialog" aria-modal="true">
+    <div class="modal-card glass-card max-w-md">
+      <button class="modal-close-btn" id="modal-close-answer" aria-label="Close modal">
+        <i data-lucide="x"></i>
+      </button>
+      
+      <div class="modal-header">
+        <h2 class="modal-title" data-i18n="addAnswerTitle">Add Answer / Response</h2>
+        <p class="modal-subtitle-desc" id="answer-modal-query-preview">"Looking for urea bags near sector 12..."</p>
+      </div>
+      
+      <form id="new-answer-form" class="modal-body margin-top-md">
+        <div class="form-group">
+          <label for="answer-author" class="filter-label" data-i18n="answerAuthorLabel">Your Name / Business</label>
+          <input type="text" id="answer-author" class="input-control w-full" placeholder="e.g. Ram Singh (Farmer) or Kalyanpur Seed Store" required>
+        </div>
+        
+        <div class="form-group margin-top-xs">
+          <label for="answer-role" class="filter-label" data-i18n="answerRoleLabel">Are you a Dealer, Expert or Farmer?</label>
+          <select id="answer-role" class="select-control w-full" required>
+            <option value="farmer" data-i18n="roleFarmer">Farmer</option>
+            <option value="dealer" data-i18n="roleDealer">Dealers / Vendor</option>
+            <option value="expert" data-i18n="roleExpert">Agri Expert</option>
+          </select>
+        </div>
+
+        <div class="form-group margin-top-sm">
+          <label for="answer-text" class="filter-label" data-i18n="answerTextLabel">Your Answer</label>
+          <textarea id="answer-text" class="textarea-control w-full" rows="4" placeholder="Provide advice, price details or stock availability here..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-full margin-top-md flex-row-center">
+          <i data-lucide="message-square-plus"></i>
+          <span data-i18n="submitAnswerBtn">Submit Answer</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-notification hidden" id="toast-notify" role="alert" aria-live="polite">
+    <div class="toast-content flex-row-align">
+      <i data-lucide="info" class="toast-icon"></i>
+      <span class="toast-message" id="toast-message-text">Message sent successfully!</span>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <!-- Leaflet Map Script -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Lucide Icons Library -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Main Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
